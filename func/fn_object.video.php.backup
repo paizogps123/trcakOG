@@ -1,0 +1,145 @@
+<?
+	session_start();
+	include ('../init.php');
+	include ('fn_common.php');
+	checkUserSession();
+	//Code Update By Vetrivel.NR 
+	// need to delete comments if there is no issue in live 
+	
+	if (!isset($_GET['imei']) &&  !isset($_GET['object']))
+	{
+		//echo "1";
+		die;
+	}
+	
+	// check privileges
+	if ($_SESSION["privileges"] == 'subuser')
+	{
+		$user_id = $_SESSION["manager_id"];
+	}
+	else
+	{
+		$user_id = $_SESSION["user_id"];
+	}
+	
+	$imei='';
+	if (isset($_GET['imei']))
+	{
+		$imei = @$_GET['imei']; 
+		//echo "T1";
+	}
+	
+	if (isset($_GET['object']))
+	{
+		$imei = @$_GET['object'];
+		if($object=getObjectFromName($imei))
+		{
+			$imei=$object["imei"]; 
+			//echo "T2";
+		}
+		else 
+		{
+			//echo json_encode($object)."2";	
+			die;
+		}
+	}
+	
+	if($imei=='')
+	{
+			//echo "3";	
+			die;
+	}
+		
+	$devID='';
+	if (isset($_GET['devID']))
+	{
+		$devID = @$_GET['devID']; 
+	}
+
+	if($devID=='')
+	{
+			die;
+	}
+	
+	loadLanguage($_SESSION["language"], $_SESSION["units"]);
+
+
+
+	function get_token() {
+	    // URL to access
+	    $url = "http://15.235.206.64/StandardApiAction_login.action?account=PAIZO&password=Paizo@123";
+
+	    // Initialize cURL session
+	    $ch = curl_init();
+
+	    // Set the URL and other cURL options
+	    curl_setopt($ch, CURLOPT_URL, $url);
+	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+	    // Execute the cURL request and store the response
+	    $response = curl_exec($ch);
+
+	    // Check for cURL errors
+	    if (curl_errno($ch)) {
+	        throw new Exception('cURL error: ' . curl_error($ch));
+	    }
+
+	    // Close the cURL session
+	    curl_close($ch);
+
+	    // Decode the JSON response
+	    print_r($response);
+	    $data = json_decode($response, true);
+
+	    // Check if the response contains the 'jsession' key
+	    if (isset($data['jsession'])) {
+	        // Return the 'jsession' value
+	        return $data['jsession'];
+	    } else {
+	        throw new Exception("JSESSION not found in the response.");
+	    }
+	}
+
+	$jsession = get_token();
+
+// Target URL
+$target_url = 'http://15.235.206.64/808gps/open/player/video.html?lang=en&devIdno='.htmlspecialchars($devID).'&jsession='.$jsession;
+//
+// Perform the redirect
+header('Location: ' . $target_url);
+exit();
+
+	//Code Modified End By Vetrivel.NR
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            iframe {
+                width: 100%;
+                height: 100%;
+                border: none;
+            }
+        </style>
+    </head>
+    <body>
+    <iframe src="http://140.245.6.5/808gps/open/player/video.html?lang=en&devIdno=<?php echo htmlspecialchars($devID); ?>&account=PAIZO&password=Paizo@123"></iframe>
+    </body>
+</html>
+
+
+
+<!--
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <body>
+        <iframe src="http://120.79.58.1:8088/808gps/open/player/video.html?lang=en&devIdno=<?php echo htmlspecialchars($devID); ?>&account=PGS&password=000000" height="auto"></iframe>
+    </body>
+</html>
+-->
